@@ -1,0 +1,6 @@
+[submodule "infra-lib"]
+	path = infra-lib
+	url = ../../gabrielfrasantos/embedded-infra-library.git
+[submodule "hal-st"]
+	path = hal-st
+	url = ../../gabrielfrasantos/embedded-hal-st.git
