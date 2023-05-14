@@ -1,0 +1,93 @@
+---
+name: Continuous Integration
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  merge_group:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.ref }}-${{ github.workflow }}
+  cancel-in-progress: true
+
+env:
+  CMAKE_BUILD_PARALLEL_LEVEL: 2
+  GTEST_COLOR: 1
+
+jobs:
+  host_build_test:
+    name: Host Build & Test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest, windows-2019]
+    steps:
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+        with:
+          persist-credentials: false
+      - uses: hendrikmuhs/ccache-action@ca3acd2731eef11f1572ccb126356c2f9298d35e # v1.2.9
+        with:
+          key: ${{ github.job }}-${{ matrix.os }}
+          variant: sccache
+      - uses: lukka/run-cmake@cdefb26b6a3a359c5f4dbc1a16cf4327d0824774 # v10.5
+        with:
+          configurePreset: "ContinuousIntegration"
+          buildPreset: "ContinuousIntegration"
+          testPreset: "ContinuousIntegration"
+          configurePresetAdditionalArgs: "['-DCMAKE_C_COMPILER_LAUNCHER=sccache', '-DCMAKE_CXX_COMPILER_LAUNCHER=sccache']"
+      - name: Upload test logs
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        with:
+          name: test-logs
+          path: build/ContinuousIntegration/Testing/Temporary/
+  embedded_build:
+    name: Embedded Build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        gcc: ["7-2018-q2", "8-2019-q3", "9-2020-q2", "10.3-2021.10"]
+        configuration: ["RelWithDebInfo"]
+    steps:
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+        with:
+          persist-credentials: false
+      - name: Install GNU Arm Embedded Toolchain ${{ matrix.gcc }}
+        uses: carlosperate/arm-none-eabi-gcc-action@bb9083f435def6b250f6264fa3b49443b76d654e # v1.6.1
+        with:
+          release: ${{ matrix.gcc }}
+      - run: sudo apt-get update && sudo apt-get install ninja-build
+      - uses: hendrikmuhs/ccache-action@ca3acd2731eef11f1572ccb126356c2f9298d35e # v1.2.9
+        with:
+          key: ${{ github.job }}-${{ matrix.gcc }}-${{ matrix.configuration }}
+      - uses: lukka/run-cmake@cdefb26b6a3a359c5f4dbc1a16cf4327d0824774 # v10.5
+        with:
+          configurePreset: "Embedded"
+          buildPreset: "Embedded-${{ matrix.configuration }}"
+          configurePresetAdditionalArgs: "['-DCMAKE_C_COMPILER_LAUNCHER=ccache', '-DCMAKE_CXX_COMPILER_LAUNCHER=ccache']"
+  rtos:
+    name: Embedded Build - RTOS
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rtos: ["FreeRTOS", "ThreadX"]
+    steps:
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+        with:
+          persist-credentials: false
+      - name: Install GNU Arm Embedded Toolchain "10.3-2021.10"
+        uses: carlosperate/arm-none-eabi-gcc-action@bb9083f435def6b250f6264fa3b49443b76d654e # v1.6.1
+        with:
+          release: "10.3-2021.10"
+      - run: sudo apt-get update && sudo apt-get install ninja-build
+      - uses: hendrikmuhs/ccache-action@ca3acd2731eef11f1572ccb126356c2f9298d35e # v1.2.9
+        with:
+          key: ${{ github.job }}
+      - uses: lukka/run-cmake@cdefb26b6a3a359c5f4dbc1a16cf4327d0824774 # v10.5
+        with:
+          configurePreset: "Embedded-${{ matrix.rtos }}"
+          buildPreset: "Embedded-${{ matrix.rtos }}-RelWithDebInfo"
+          configurePresetAdditionalArgs: "['-DCMAKE_C_COMPILER_LAUNCHER=ccache', '-DCMAKE_CXX_COMPILER_LAUNCHER=ccache']"

@@ -1,32 +1,17 @@
-# Prerequisites
-*.d
+# Project outcomes
+output/
+binaries/
+build/
 
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
+# Eclipse files
+.settings/
+.project
+.cproject
 
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
+# IAR garbage
+*.dep
+*.stackdump
 *.exe
-*.out
-*.app
+
+# Sonarqube
+.scannerwork
