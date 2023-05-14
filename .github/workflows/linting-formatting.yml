@@ -1,60 +1,62 @@
 ---
-    name: Linting & Formatting
-    
-    on:
-      pull_request:
-        types: [opened, synchronize, reopened]
-    
-    concurrency:
-      group: ${{ github.ref }}-${{ github.workflow }}
-      cancel-in-progress: true
-    
+name: Linting & Formatting
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: ${{ github.ref }}-${{ github.workflow }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  formatter:
+    name: Formatting
+    runs-on: ubuntu-latest
     permissions:
       contents: read
-    
-    jobs:
-      formatter:
-        name: Formatting
-        runs-on: ubuntu-latest
-        permissions:
-          contents: read
-          pull-requests: write
-        steps:
-          - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
-            with:
-              persist-credentials: false
-          #- uses: DoozyX/clang-format-lint-action@a83a8fb7d371f66da7dd1c4f33a193023899494b # v0.16
-          #  with:
-          #    clangFormatVersion: 14
-          #    inplace: true
-          #    extensions: "cpp,hpp"
-          #- uses: reviewdog/action-suggester@8f83d27e749053b2029600995c115026a010408e # v1.6.0
-          #  with:
-          #    tool_name: clang-format
-          #    filter_mode: diff_context
-      linter:
-        name: Linter
-        runs-on: ubuntu-latest
-        permissions:
-          pull-requests: write
-        steps:
-          - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
-            with:
-              fetch-depth: 0
-          - name: Run Linter
-            uses: oxsecurity/megalinter@93700f8c21c59ea784a32abe23896e49e54463b8 # v6.22.2
-            env:
-              APPLY_FIXES: all
-              VALIDATE_ALL_CODEBASE: true
-              GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          - name: Upload Linter artifacts
-            if: ${{ success() }} || ${{ failure() }}
-            uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
-            with:
-              name: linter
-              path: |
-                megalinter-reports
-          - uses: reviewdog/action-suggester@8f83d27e749053b2029600995c115026a010408e # v1.6.0
-            with:
-              tool_name: MegaLinter
-              filter_mode: diff_context
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+        with:
+          persist-credentials: false
+      #- uses: DoozyX/clang-format-lint-action@a83a8fb7d371f66da7dd1c4f33a193023899494b # v0.16
+      #  with:
+      #    clangFormatVersion: 14
+      #    inplace: true
+      #    extensions: "cpp,hpp"
+      #- uses: reviewdog/action-suggester@8f83d27e749053b2029600995c115026a010408e # v1.6.0
+      #  with:
+      #    tool_name: clang-format
+      #    filter_mode: diff_context
+  linter:
+    name: Linter
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+        with:
+          fetch-depth: 0
+      - name: Run Linter
+        uses: oxsecurity/megalinter@93700f8c21c59ea784a32abe23896e49e54463b8 # v6.22.2
+        env:
+          APPLY_FIXES: all
+          VALIDATE_ALL_CODEBASE: true
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload Linter artifacts
+        if: ${{ success() }} || ${{ failure() }}
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        with:
+          name: linter
+          path: |
+            megalinter-reports
+      - uses: reviewdog/action-suggester@8f83d27e749053b2029600995c115026a010408e # v1.6.0
+        with:
+          tool_name: MegaLinter
+          filter_mode: diff_contexta
