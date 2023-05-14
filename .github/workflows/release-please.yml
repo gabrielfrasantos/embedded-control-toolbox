@@ -32,4 +32,4 @@
             with:
               command: manifest
               #token: ${{ steps.token.outputs.token }}
-              token: ${{ secrets.AUTOMATIC_RELEASE_TOKEN }
+              token: ${{ secrets.AUTOMATIC_RELEASE_TOKEN }}
