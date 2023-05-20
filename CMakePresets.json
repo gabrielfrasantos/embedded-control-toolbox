@@ -10,28 +10,46 @@
       "name": "defaults",
       "hidden": true,
       "binaryDir": "${sourceDir}/build/${presetName}",
-      "generator": "Ninja Multi-Config",
       "cacheVariables": {
-        "CMAKE_CONFIGURATION_TYPES": "Debug;Release;RelWithDebInfo;MinSizeRel",
-        "HALST_BUILD_EXAMPLES": true
+        "CMAKE_CONFIGURATION_TYPES": "Debug;Release;RelWithDebInfo;MinSizeRel"
       }
     },
     {
       "name": "host",
       "displayName": "host",
+      "generator": "Ninja Multi-Config",
       "description": "Build required tools for host",
-      "inherits": "defaults"
+      "inherits": "defaults",
+      "cacheVariables": {
+        "EMIL_BUILD_TESTS": "On"
+      }
+    },
+    {
+      "name": "Windows",
+      "displayName": "windows",
+      "description": "Build required tools for windows",
+      "generator": "Visual Studio 17 2022",
+      "architecture": {
+        "value": "Win32",
+        "strategy": "set"
+      },
+      "inherits": "defaults",
+      "cacheVariables": {
+        "EMIL_BUILD_TESTS": "On"
+      }
     },
     {
       "name": "stm32",
       "hidden": true,
       "inherits": "defaults",
+      "generator": "Ninja Multi-Config",
       "environment": {
         "CMAKE_TOOLCHAIN_FILE": ""
       },
       "cacheVariables": {
         "EMIL_GENERATE_PACKAGE_CONFIG": false,
-        "TARGET_MCU_VENDOR": "st"
+        "TARGET_MCU_VENDOR": "st",
+        "HALST_BUILD_EXAMPLES": true
       }
     },
     {
